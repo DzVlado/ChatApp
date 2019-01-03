@@ -19,6 +19,10 @@ Route::get('/', function () {
 //    broadcast(new \App\Events\ExampleEvent);
 //});
 
+//Route::get('test-private', function(){
+//    broadcast(new \App\Events\PrivateMessageSent(auth()->user()));
+//});
+
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
@@ -27,4 +31,6 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::group(['middleware' => 'auth'], function(){
     Route::get('messages', 'MessageController@index');
     Route::post('messages', 'MessageController@store');
+
+    Route::get('users', 'UserController@index');
 });

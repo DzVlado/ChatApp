@@ -1870,12 +1870,32 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       user: {},
+      toUser: {},
+      header: '',
       messages: {},
-      body: ''
+      body: '',
+      frends: {}
     };
   },
   methods: {
@@ -1883,8 +1903,21 @@ __webpack_require__.r(__webpack_exports__);
       if (this.body != '') {
         axios.post('/messages', {
           body: this.body,
-          user_id: user.id
+          user_id: user.id,
+          frend: this.toUser.id
         });
+
+        if (this.toUser.id != null) {
+          this.createNewMessage(this.body, this.user.id, this.user.name); // let newmessage = {};
+          // newmessage.body = this.body;
+          // newmessage.user_id = this.user.id;
+          // newmessage.name = this.user.name;
+          //
+          // this.messages.push(newmessage);
+          //
+          // this.scrollToEnd();
+        }
+
         this.body = '';
         this.scrollToEnd();
       }
@@ -1893,28 +1926,77 @@ __webpack_require__.r(__webpack_exports__);
       $("#messages").animate({
         scrollTop: $('#messages').prop("scrollHeight")
       }, 1000);
+    },
+    getGroupMessages: function getGroupMessages() {
+      var _this = this;
+
+      this.header = 'Group Chat';
+      this.toUser = {};
+      axios.get('/messages').then(function (response) {
+        _this.messages = response.data;
+      });
+    },
+    getFrends: function getFrends() {
+      var _this2 = this;
+
+      axios.get('/users').then(function (response) {
+        _this2.frends = response.data;
+      });
+    },
+    getUserMessages: function getUserMessages(frend) {
+      var _this3 = this;
+
+      this.toUser = frend;
+      axios.get('/messages', {
+        params: {
+          user: this.user.id,
+          frend: frend.id
+        }
+      }).then(function (response) {
+        _this3.header = frend.name;
+        _this3.messages = response.data;
+      });
+    },
+    createNewMessage: function createNewMessage(body, user_id, user_name) {
+      var newmessage = {};
+      newmessage.body = body;
+      newmessage.user_id = user_id;
+      newmessage.name = user_name;
+      this.messages.push(newmessage);
+      this.scrollToEnd();
     }
   },
   created: function created() {
-    var _this = this;
-
     this.user = user;
-    axios.get('/messages').then(function (response) {
-      _this.messages = response.data;
-    });
+    this.getGroupMessages();
+    this.getFrends();
   },
   mounted: function mounted() {
-    var _this2 = this;
+    var _this4 = this;
 
     window.Echo.channel('message-sent').listen('MessageSent', function (e) {
-      var newmessage = {};
-      newmessage.body = e.message.body;
-      newmessage.user_id = e.user.id;
-      newmessage.user = e.user;
+      _this4.createNewMessage(e.message.body, e.user.id, e.user.name); // let newmessage = {};
+      // newmessage.body = e.message.body;
+      // newmessage.user_id = e.user.id;
+      // newmessage.name = e.user.name;
+      //
+      // this.messages.push(newmessage);
+      //
+      // this.scrollToEnd();
 
-      _this2.messages.push(newmessage);
+    });
+    window.Echo.private('user-' + this.user.id).listen('PrivateMessageSent', function (e) {
+      if (e.user.id == _this4.toUser.id) {
+        _this4.createNewMessage(e.message.body, e.user.id, e.user.name); // let newmessage = {};
+        // newmessage.body = e.message.body;
+        // newmessage.user_id = e.user.id;
+        // newmessage.name = e.user.name;
+        //
+        // this.messages.push(newmessage);
+        //
+        // this.scrollToEnd();
 
-      _this2.scrollToEnd();
+      }
     });
   }
 });
@@ -47196,89 +47278,144 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", [
-    _c(
-      "div",
-      { staticClass: "card-body scroll", attrs: { id: "messages" } },
-      _vm._l(this.messages, function(message) {
-        return _c(
+  return _c("div", { staticClass: "row justify-content-center" }, [
+    _c("div", { staticClass: "col-md-4" }, [
+      _c("div", { staticClass: "card" }, [
+        _c("div", { staticClass: "card-header" }, [_vm._v("Frends")]),
+        _vm._v(" "),
+        _c(
           "div",
-          {
-            key: message.id,
-            staticClass: "alert alert-success",
-            class: { me: _vm.user.id == message.user_id }
-          },
+          { staticClass: "card-body scroll", attrs: { id: "frends" } },
           [
             _c("span", { staticClass: "name" }, [
-              _vm.user.id == message.user_id
-                ? _c("p", [_vm._v("Me:")])
-                : _c("p", [_vm._v(_vm._s(message.user.name) + ":")])
+              _c(
+                "p",
+                {
+                  staticClass: "btn btn-primary col-md-12",
+                  on: {
+                    click: function($event) {
+                      _vm.getGroupMessages()
+                    }
+                  }
+                },
+                [_vm._v("Group Chat")]
+              )
             ]),
             _vm._v(" "),
-            _c("p", { staticClass: "body" }, [
-              _vm._v(
-                "\n                " + _vm._s(message.body) + "\n            "
-              )
-            ])
-          ]
-        )
-      }),
-      0
-    ),
-    _vm._v(" "),
-    _c("div", { staticClass: "card-footer" }, [
-      _c(
-        "form",
-        {
-          on: {
-            submit: function($event) {
-              $event.preventDefault()
-              _vm.sendMessage()
-            }
-          }
-        },
-        [
-          _c("div", { staticClass: "form-group" }, [
-            _c("div", { staticClass: "row" }, [
-              _c("textarea", {
-                directives: [
+            _vm._l(this.frends, function(frend) {
+              return _c("span", { key: frend.id, staticClass: "name" }, [
+                _c(
+                  "p",
                   {
-                    name: "model",
-                    rawName: "v-model",
-                    value: _vm.body,
-                    expression: "body"
-                  }
-                ],
-                staticClass: "form-control col-md-10",
-                attrs: {
-                  name: "body",
-                  id: "body",
-                  placeholder: "Message body",
-                  maxlength: "191"
-                },
-                domProps: { value: _vm.body },
-                on: {
-                  input: function($event) {
-                    if ($event.target.composing) {
-                      return
+                    staticClass: "btn btn-info col-md-12",
+                    on: {
+                      click: function($event) {
+                        _vm.getUserMessages(frend)
+                      }
                     }
-                    _vm.body = $event.target.value
-                  }
+                  },
+                  [_vm._v(_vm._s(frend.name))]
+                )
+              ])
+            })
+          ],
+          2
+        )
+      ])
+    ]),
+    _vm._v(" "),
+    _c("div", { staticClass: "col-md-8" }, [
+      _c("div", { staticClass: "card" }, [
+        _c("div", { staticClass: "card-header" }, [
+          _vm._v(_vm._s(this.header))
+        ]),
+        _vm._v(" "),
+        _c(
+          "div",
+          { staticClass: "card-body scroll", attrs: { id: "messages" } },
+          _vm._l(this.messages, function(message) {
+            return _c(
+              "div",
+              {
+                key: message.id,
+                staticClass: "alert alert-success",
+                class: { me: _vm.user.id == message.user_id }
+              },
+              [
+                _c("span", { staticClass: "name" }, [
+                  _vm.user.id == message.user_id
+                    ? _c("p", [_vm._v("Me:")])
+                    : _c("p", [_vm._v(_vm._s(message.name) + ":")])
+                ]),
+                _vm._v(" "),
+                _c("p", { staticClass: "body" }, [
+                  _vm._v(
+                    "\n                        " +
+                      _vm._s(message.body) +
+                      "\n                    "
+                  )
+                ])
+              ]
+            )
+          }),
+          0
+        ),
+        _vm._v(" "),
+        _c("div", { staticClass: "card-footer" }, [
+          _c(
+            "form",
+            {
+              on: {
+                submit: function($event) {
+                  $event.preventDefault()
+                  _vm.sendMessage()
                 }
-              }),
-              _vm._v(" "),
-              _c(
-                "button",
-                {
-                  staticClass: "btn btn-success col-md-2",
-                  attrs: { type: "submit" }
-                },
-                [_vm._v("Send")]
-              )
-            ])
-          ])
-        ]
-      )
+              }
+            },
+            [
+              _c("div", { staticClass: "form-group" }, [
+                _c("div", { staticClass: "row" }, [
+                  _c("textarea", {
+                    directives: [
+                      {
+                        name: "model",
+                        rawName: "v-model",
+                        value: _vm.body,
+                        expression: "body"
+                      }
+                    ],
+                    staticClass: "form-control col-md-10",
+                    attrs: {
+                      name: "body",
+                      id: "body",
+                      placeholder: "Message body",
+                      maxlength: "191"
+                    },
+                    domProps: { value: _vm.body },
+                    on: {
+                      input: function($event) {
+                        if ($event.target.composing) {
+                          return
+                        }
+                        _vm.body = $event.target.value
+                      }
+                    }
+                  }),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-success col-md-2",
+                      attrs: { type: "submit" }
+                    },
+                    [_vm._v("Send")]
+                  )
+                ])
+              ])
+            ]
+          )
+        ])
+      ])
     ])
   ])
 }
