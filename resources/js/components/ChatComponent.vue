@@ -65,16 +65,7 @@
                     });
 
                     if(this.toUser.id != null){
-
                         this.createNewMessage(this.body, this.user.id, this.user.name);
-                        // let newmessage = {};
-                        // newmessage.body = this.body;
-                        // newmessage.user_id = this.user.id;
-                        // newmessage.name = this.user.name;
-                        //
-                        // this.messages.push(newmessage);
-                        //
-                        // this.scrollToEnd();
                     }
 
                     this.body = '';
@@ -132,28 +123,12 @@
             window.Echo.channel('message-sent')
                 .listen('MessageSent', (e) => {
                     this.createNewMessage(e.message.body, e.user.id, e.user.name);
-                    // let newmessage = {};
-                    // newmessage.body = e.message.body;
-                    // newmessage.user_id = e.user.id;
-                    // newmessage.name = e.user.name;
-                    //
-                    // this.messages.push(newmessage);
-                    //
-                    // this.scrollToEnd();
                 });
 
             window.Echo.private('user-' + this.user.id)
                 .listen('PrivateMessageSent', (e) => {
                     if(e.user.id == this.toUser.id){
                         this.createNewMessage(e.message.body, e.user.id, e.user.name);
-                        // let newmessage = {};
-                        // newmessage.body = e.message.body;
-                        // newmessage.user_id = e.user.id;
-                        // newmessage.name = e.user.name;
-                        //
-                        // this.messages.push(newmessage);
-                        //
-                        // this.scrollToEnd();
                     }
                 });
         }
